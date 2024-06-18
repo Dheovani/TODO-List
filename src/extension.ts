@@ -23,7 +23,7 @@ class TodoListDataProvider implements vscode.TreeDataProvider<TodoListItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<TodoListItem | undefined | void> = new vscode.EventEmitter<TodoListItem | undefined | void>();
   	readonly onDidChangeTreeData: vscode.Event<TodoListItem | undefined | void> = this._onDidChangeTreeData.event;
 
-	constructor(private globalState: vscode.Memento) {}
+	constructor(private workspaceState: vscode.Memento) {}
 
 	public refresh(): void {
 		this._onDidChangeTreeData.fire();
@@ -40,7 +40,7 @@ class TodoListDataProvider implements vscode.TreeDataProvider<TodoListItem> {
     }
 
 	private getElements(): TodoListItem[] {
-		const elements = this.globalState.get<TodoListItem[]>(GLOBAL_STATE_KEY);
+		const elements = this.workspaceState.get<TodoListItem[]>(GLOBAL_STATE_KEY);
 		const items: TodoListItem[] = [];
 		
 		elements?.forEach(e => items.push(e));
@@ -61,34 +61,40 @@ async function commentLine(): Promise<string | undefined> {
 		placeHolder: 'Description'
 	});
 
+	// If the user cancels or doesn't provide a description, do nothing
+	if (!desc) return;
+
     await editor.edit(editBuilder => {
         editBuilder.insert(new vscode.Position(position.line, 0), `// TODO: ${desc}\n`);
     });
 
-	return desc;
+	return `${editor.document.fileName}, ${position.line}: ${desc}`;
 }
 
-// TODO: It's addind a infinite amount of items
-async function addItem(globalState: vscode.Memento, provider: TodoListDataProvider): Promise<void> {
+// Adds a new item to the TODO list
+async function addItem(workspaceState: vscode.Memento, provider: TodoListDataProvider): Promise<void> {
 	const selectedOption = await vscode.window.showInformationMessage("Add TODO?", "Yes", "No");
-	const desc = (selectedOption == "Yes") ? await commentLine() : undefined;
 
-	if (desc) {
-		const elements = globalState.get<TodoListItem[]>(GLOBAL_STATE_KEY) || [];
-		const newItem = new TodoListItem(desc, "TODO", vscode.TreeItemCollapsibleState.None);
+	if (selectedOption === "Yes") {
+		const desc = await commentLine();
 
-		elements.push(newItem);
-		await globalState.update(GLOBAL_STATE_KEY, elements);
+		if (desc) {
+			const elements = workspaceState.get<TodoListItem[]>(GLOBAL_STATE_KEY) || [];
+			const newItem = new TodoListItem("TODO", desc, vscode.TreeItemCollapsibleState.None);
 
-		provider.refresh();
+			elements.push(newItem);
+			await workspaceState.update(GLOBAL_STATE_KEY, elements);
+
+			provider.refresh();
+		}
 	}
 }
 
 export function activate(context: vscode.ExtensionContext) {
-	const dataProvider = new TodoListDataProvider(context.globalState);
-	const refresh = vscode.commands.registerCommand('extension.refresh', dataProvider.refresh);
+	const dataProvider = new TodoListDataProvider(context.workspaceState);
+	const refresh = vscode.commands.registerCommand('extension.refresh', () => dataProvider.refresh());
 	const addTodoItem = vscode.commands.registerCommand(
-		'extension.addTodoItem', () => addItem(context.globalState, dataProvider));
+		'extension.addTodoItem', () => addItem(context.workspaceState, dataProvider));
 
 	context.subscriptions.push(refresh);
 	context.subscriptions.push(addTodoItem);
