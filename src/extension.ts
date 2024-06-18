@@ -1,16 +1,27 @@
 import * as vscode from 'vscode';
 
-const GLOBAL_STATE_KEY = 'TODO-List-Items';
+const WORKSPACE_STATE_KEY = 'TODO-List-Items';
+
+enum TodoContextValues {
+	FILE = "file",
+	ITEM = "item"
+};
 
 class TodoListItem extends vscode.TreeItem {
+	public resourceUri: vscode.Uri | undefined = undefined;
+	public contextValues: TodoContextValues | undefined = undefined;
+
     constructor(
-        public readonly label: string,
-        private version: string,
-        public readonly collapsibleState: vscode.TreeItemCollapsibleState
+        name: string,
+        desc: string,
+        collapsibleState: vscode.TreeItemCollapsibleState,
+		public children: TodoListItem[] = []
     ) {
-        super(label, collapsibleState);
-        this.tooltip = `${this.label}-${this.version}`;
-        this.description = this.version;
+		const newName = `${name}`.split("\\").pop() || name;
+
+        super(newName, collapsibleState);
+        this.tooltip = name;
+        this.description = desc;
     }
 
     iconPath = {
@@ -29,32 +40,21 @@ class TodoListDataProvider implements vscode.TreeDataProvider<TodoListItem> {
 		this._onDidChangeTreeData.fire();
 	}
 
-    public getTreeItem(element: TodoListItem): vscode.TreeItem {
+	public getTreeItem(element: TodoListItem): vscode.TreeItem {
         return element;
     }
 
-    public getChildren(element: TodoListItem): Thenable<TodoListItem[]> {
-		return element
-			? Promise.resolve([element])
-			: Promise.resolve(this.getElements());
+    public getChildren(element?: TodoListItem): Thenable<TodoListItem[]> {
+        return Promise.resolve(element ? element.children : this.getElements());
     }
 
-	private getElements(): TodoListItem[] {
-		const elements = this.workspaceState.get<TodoListItem[]>(GLOBAL_STATE_KEY);
-		const items: TodoListItem[] = [];
-		
-		elements?.forEach(e => items.push(e));
-
-		return items;
-	}
+    private getElements(): TodoListItem[] {
+        return this.workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
+    }
 }
 
 // Adds the "TODO" comment above the current line
-async function commentLine(): Promise<string | undefined> {
-	const editor = vscode.window.activeTextEditor;
-
-	if (!editor) return;
-
+async function commentLine(editor: vscode.TextEditor): Promise<string | undefined> {
 	const position = editor.selection.active;
 	const desc = await vscode.window.showInputBox({
 		prompt: 'What do you need TODO?',
@@ -68,7 +68,7 @@ async function commentLine(): Promise<string | undefined> {
         editBuilder.insert(new vscode.Position(position.line, 0), `// TODO: ${desc}\n`);
     });
 
-	return `${editor.document.fileName}, ${position.line}: ${desc}`;
+	return desc;
 }
 
 // Adds a new item to the TODO list
@@ -76,15 +76,29 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
 	const selectedOption = await vscode.window.showInformationMessage("Add TODO?", "Yes", "No");
 
 	if (selectedOption === "Yes") {
-		const desc = await commentLine();
+		const editor = vscode.window.activeTextEditor;
+
+		if (!editor) return;
+
+		const desc = await commentLine(editor);
 
 		if (desc) {
-			const elements = workspaceState.get<TodoListItem[]>(GLOBAL_STATE_KEY) || [];
-			const newItem = new TodoListItem("TODO", desc, vscode.TreeItemCollapsibleState.None);
+			const elements = workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
+			const newItem = new TodoListItem(`Line ${editor.selection.active.line}: `, desc, vscode.TreeItemCollapsibleState.None);
+			newItem.contextValues = TodoContextValues.ITEM;
 
-			elements.push(newItem);
-			await workspaceState.update(GLOBAL_STATE_KEY, elements);
+			if (elements.some(el => el.label === editor.document.fileName)) {
+				elements.filter(el => el.label === editor.document.fileName).at(0)?.children.push(newItem);
+			} else {
+				const parent = new TodoListItem(editor.document.fileName, "", vscode.TreeItemCollapsibleState.Collapsed);
+				parent.contextValues = TodoContextValues.FILE;
+				parent.resourceUri = editor.document.uri;
 
+				parent.children.push(newItem);
+				elements.push(parent);
+			}
+			
+			workspaceState.update(WORKSPACE_STATE_KEY, elements);
 			provider.refresh();
 		}
 	}
