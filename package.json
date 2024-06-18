@@ -15,15 +15,19 @@
     "commands": [
       {
         "command": "extension.todoList",
-        "title": "TODO List",
-        "icon": {
-          "light": "./resources/light/TodoIcon.svg",
-          "dark": "./resources/dark/TodoIcon.svg"
-        }
+        "title": "TODO List"
+      },
+      {
+        "command": "extension.refresh",
+        "title": "Refresh list"
+      },
+      {
+        "command": "extension.addTodoItem",
+        "title": "Add TODO List Item"
       }
     ],
     "viewsContainers": {
-    "activitybar": [
+      "activitybar": [
         {
           "id": "todoListContainer",
           "title": "TODO List",
@@ -38,7 +42,15 @@
           "name": "TODO List"
         }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "key": "ctrl+alt+t",
+        "command": "extension.addTodoItem",
+        "when": "editorTextFocus",
+        "mac": "cmd+alt+t"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
