@@ -1,55 +1,20 @@
 import * as vscode from 'vscode';
+import { TodoListDataProvider, TodoListItem, WORKSPACE_STATE_KEY, getParent, getChild } from './tree';
 
-const WORKSPACE_STATE_KEY = 'TODO-List-Items';
-
-enum TodoContextValues {
-	FILE = "file",
-	ITEM = "item"
-};
-
-class TodoListItem extends vscode.TreeItem {
-	public resourceUri: vscode.Uri | undefined = undefined;
-	public contextValues: TodoContextValues | undefined = undefined;
-
-    constructor(
-        name: string,
-        desc: string,
-        collapsibleState: vscode.TreeItemCollapsibleState,
-		public children: TodoListItem[] = []
-    ) {
-		const newName = `${name}`.split("\\").pop() || name;
-
-        super(newName, collapsibleState);
-        this.tooltip = name;
-        this.description = desc;
-    }
-
-    iconPath = {
-        light: '../resources/light/TodoIcon.svg',
-        dark: '../resources/dark/TodoIcon.svg'
-    };
-}
-
-class TodoListDataProvider implements vscode.TreeDataProvider<TodoListItem> {
-	private _onDidChangeTreeData: vscode.EventEmitter<TodoListItem | undefined | void> = new vscode.EventEmitter<TodoListItem | undefined | void>();
-  	readonly onDidChangeTreeData: vscode.Event<TodoListItem | undefined | void> = this._onDidChangeTreeData.event;
-
-	constructor(private workspaceState: vscode.Memento) {}
-
-	public refresh(): void {
-		this._onDidChangeTreeData.fire();
-	}
-
-	public getTreeItem(element: TodoListItem): vscode.TreeItem {
-        return element;
-    }
-
-    public getChildren(element?: TodoListItem): Thenable<TodoListItem[]> {
-        return Promise.resolve(element ? element.children : this.getElements());
-    }
-
-    private getElements(): TodoListItem[] {
-        return this.workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
+// Opens a specific file at a specific line
+async function openFile(filePath: string, lineNumber: number = 0): Promise<void> {
+    const uri = vscode.Uri.file(filePath);
+    
+    try {
+        const document = await vscode.workspace.openTextDocument(uri);
+        const editor = await vscode.window.showTextDocument(document);
+        const position = new vscode.Position(lineNumber, 0);
+        const selection = new vscode.Selection(position, position);
+        
+        editor.selection = selection;
+        editor.revealRange(selection, vscode.TextEditorRevealType.InCenter);
+    } catch (error: any) {
+        vscode.window.showErrorMessage(`Failed to open file at ${filePath}: ${error.message}`);
     }
 }
 
@@ -80,21 +45,18 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
 
 		if (!editor) return;
 
+		const { document } = editor;
 		const desc = await commentLine(editor);
 
 		if (desc) {
 			const elements = workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
-			const newItem = new TodoListItem(`Line ${editor.selection.active.line}: `, desc, vscode.TreeItemCollapsibleState.None);
-			newItem.contextValues = TodoContextValues.ITEM;
+			const child = getChild(desc, editor);
 
-			if (elements.some(el => el.label === editor.document.fileName)) {
-				elements.filter(el => el.label === editor.document.fileName).at(0)?.children.push(newItem);
+			if (elements.some(el => el.fullPath === document.fileName)) {
+				elements.filter(el => el.fullPath === document.fileName).at(0)?.children.push(child);
 			} else {
-				const parent = new TodoListItem(editor.document.fileName, "", vscode.TreeItemCollapsibleState.Collapsed);
-				parent.contextValues = TodoContextValues.FILE;
-				parent.resourceUri = editor.document.uri;
-
-				parent.children.push(newItem);
+				const parent = getParent(document.fileName, document.uri);
+				parent.children.push(child);
 				elements.push(parent);
 			}
 			
@@ -105,13 +67,17 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
 }
 
 export function activate(context: vscode.ExtensionContext) {
+	context.workspaceState.update(WORKSPACE_STATE_KEY, undefined);
 	const dataProvider = new TodoListDataProvider(context.workspaceState);
 	const refresh = vscode.commands.registerCommand('extension.refresh', () => dataProvider.refresh());
 	const addTodoItem = vscode.commands.registerCommand(
 		'extension.addTodoItem', () => addItem(context.workspaceState, dataProvider));
-
+	const openFileCommand = vscode.commands.registerCommand(
+		'extension.openFile', (filePath: string, lineNumber: number) => openFile(filePath, lineNumber));
+	
 	context.subscriptions.push(refresh);
 	context.subscriptions.push(addTodoItem);
+    context.subscriptions.push(openFileCommand);
 
 	vscode.window.registerTreeDataProvider('todoList', dataProvider);
 	vscode.window.createTreeView('todoList', { treeDataProvider: dataProvider });
