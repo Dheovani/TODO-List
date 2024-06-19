@@ -87,7 +87,6 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-    // context.workspaceState.update(WORKSPACE_STATE_KEY, undefined);
     const dataProvider = new TodoListDataProvider(context.workspaceState);
     const refresh = vscode.commands.registerCommand('extension.refresh', () => dataProvider.refresh());
     const openFile = vscode.commands.registerCommand('extension.openFile', (item: TodoListItem) => goToFile(item));
@@ -95,11 +94,16 @@ export function activate(context: vscode.ExtensionContext): void {
         'extension.addTodoItem', () => addItem(context.workspaceState, dataProvider));
     const deleteItem = vscode.commands.registerCommand(
         'extension.deleteItem', (item: TodoListItem) => remove(item, context.workspaceState, dataProvider));
+    const clear = vscode.commands.registerCommand('extension.clear', () => {
+        context.workspaceState.update(WORKSPACE_STATE_KEY, undefined);
+        dataProvider.refresh();
+    });
 
-    context.subscriptions.push(refresh);
-    context.subscriptions.push(openFile);
-    context.subscriptions.push(addTodoItem);
-    context.subscriptions.push(deleteItem);
+    context.subscriptions.push(refresh); // Refresh item list
+    context.subscriptions.push(openFile); // Go to file at specific line
+    context.subscriptions.push(addTodoItem); // Creates new item
+    context.subscriptions.push(deleteItem); // Deletes specific item
+    context.subscriptions.push(clear); // Deletes all elements
 
     vscode.window.registerTreeDataProvider('todoList', dataProvider);
     vscode.window.createTreeView('todoList', { treeDataProvider: dataProvider });
