@@ -21,25 +21,25 @@
   "contributes": {
     "commands": [
       {
-        "command": "extension.refresh",
+        "command": "todolist.refresh",
         "title": "Refresh list",
         "icon": "$(refresh)"
       },
       {
-        "command": "extension.addTodoItem",
+        "command": "todolist.addTodoItem",
         "title": "Add TODO List Item"
       },
       {
-        "command": "extension.openFile",
+        "command": "todolist.openFile",
         "title": "Opens the file",
         "icon": "$(go-to-file)"
       },
       {
-        "command": "extension.deleteItem",
+        "command": "todolist.deleteItem",
         "title": "Delete"
       },
       {
-        "command": "extension.clear",
+        "command": "todolist.clear",
         "title": "Delete all",
         "icon": "$(trash)"
       }
@@ -63,33 +63,33 @@
     },
     "keybindings": [
       {
-        "key": "ctrl+alt+t",
-        "command": "extension.addTodoItem",
+        "key": "alt+=",
+        "command": "todolist.addTodoItem",
         "when": "editorTextFocus",
-        "mac": "cmd+alt+t"
+        "mac": "alt+="
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "extension.refresh",
+          "command": "todolist.refresh",
           "when": "view == todoList",
           "group": "navigation"
         },
         {
-          "command": "extension.clear",
+          "command": "todolist.clear",
           "when": "view == todoList",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "extension.openFile",
+          "command": "todolist.openFile",
           "when": "view == todoList",
           "group": "inline"
         },
         {
-          "command": "extension.deleteItem",
+          "command": "todolist.deleteItem",
           "when": "view == todoList"
         }
       ]

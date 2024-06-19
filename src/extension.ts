@@ -88,13 +88,13 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
 
 export function activate(context: vscode.ExtensionContext): void {
     const dataProvider = new TodoListDataProvider(context.workspaceState);
-    const refresh = vscode.commands.registerCommand('extension.refresh', () => dataProvider.refresh());
-    const openFile = vscode.commands.registerCommand('extension.openFile', (item: TodoListItem) => goToFile(item));
+    const refresh = vscode.commands.registerCommand('todolist.refresh', () => dataProvider.refresh());
+    const openFile = vscode.commands.registerCommand('todolist.openFile', (item: TodoListItem) => goToFile(item));
     const addTodoItem = vscode.commands.registerCommand(
-        'extension.addTodoItem', () => addItem(context.workspaceState, dataProvider));
+        'todolist.addTodoItem', () => addItem(context.workspaceState, dataProvider));
     const deleteItem = vscode.commands.registerCommand(
-        'extension.deleteItem', (item: TodoListItem) => remove(item, context.workspaceState, dataProvider));
-    const clear = vscode.commands.registerCommand('extension.clear', () => {
+        'todolist.deleteItem', (item: TodoListItem) => remove(item, context.workspaceState, dataProvider));
+    const clear = vscode.commands.registerCommand('todolist.clear', () => {
         context.workspaceState.update(WORKSPACE_STATE_KEY, undefined);
         dataProvider.refresh();
     });
