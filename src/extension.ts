@@ -57,32 +57,28 @@ async function commentLine(editor: vscode.TextEditor): Promise<string | undefine
 
 // Adds a new item to the TODO list
 async function addItem(workspaceState: vscode.Memento, provider: TodoListDataProvider): Promise<void> {
-    const selectedOption = await vscode.window.showInformationMessage("Add TODO?", "Yes", "No");
+    const editor = vscode.window.activeTextEditor;
 
-    if (selectedOption === "Yes") {
-        const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
 
-        if (!editor) return;
+    const { document } = editor;
+    const desc = await commentLine(editor);
 
-        const { document } = editor;
-        const desc = await commentLine(editor);
+    if (desc) {
+        const elements = workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
+        const existingParent = elements.find(el => el.fullPath === document.fileName);
+        const child = getChild(desc, document.fileName, editor.selection.active.line);
 
-        if (desc) {
-            const elements = workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
-            const existingParent = elements.find(el => el.fullPath === document.fileName);
-            const child = getChild(desc, document.fileName, editor.selection.active.line);
-
-            if (existingParent) {
-                existingParent.children.push(child);
-            } else {
-                const parent = getParent(document.fileName);
-                parent.children.push(child);
-                elements.push(parent);
-            }
-
-            workspaceState.update(WORKSPACE_STATE_KEY, elements);
-            provider.refresh();
+        if (existingParent) {
+            existingParent.children.push(child);
+        } else {
+            const parent = getParent(document.fileName);
+            parent.children.push(child);
+            elements.push(parent);
         }
+
+        workspaceState.update(WORKSPACE_STATE_KEY, elements);
+        provider.refresh();
     }
 }
 
