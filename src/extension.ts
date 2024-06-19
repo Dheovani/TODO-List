@@ -88,22 +88,29 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
 
 export function activate(context: vscode.ExtensionContext): void {
     const dataProvider = new TodoListDataProvider(context.workspaceState);
-    const refresh = vscode.commands.registerCommand('todolist.refresh', () => dataProvider.refresh());
-    const openFile = vscode.commands.registerCommand('todolist.openFile', (item: TodoListItem) => goToFile(item));
-    const addTodoItem = vscode.commands.registerCommand(
-        'todolist.addTodoItem', () => addItem(context.workspaceState, dataProvider));
-    const deleteItem = vscode.commands.registerCommand(
-        'todolist.deleteItem', (item: TodoListItem) => remove(item, context.workspaceState, dataProvider));
-    const clear = vscode.commands.registerCommand('todolist.clear', () => {
-        context.workspaceState.update(WORKSPACE_STATE_KEY, undefined);
+
+    const refreshCmd = vscode.commands.registerCommand('todolist.refresh', () => dataProvider.refresh());
+    const openCmd = vscode.commands.registerCommand('todolist.open', (item: TodoListItem) => goToFile(item));
+    const addCmd = vscode.commands.registerCommand('todolist.add', () => addItem(context.workspaceState, dataProvider));    
+
+    const deleteCmd = vscode.commands.registerCommand(
+        'todolist.delete', (item: TodoListItem) => remove(item, context.workspaceState, dataProvider));
+
+    const clearCmd = vscode.commands.registerCommand('todolist.clear', async () => {
+        await context.workspaceState.update(WORKSPACE_STATE_KEY, undefined);
         dataProvider.refresh();
     });
 
-    context.subscriptions.push(refresh); // Refresh item list
-    context.subscriptions.push(openFile); // Go to file at specific line
-    context.subscriptions.push(addTodoItem); // Creates new item
-    context.subscriptions.push(deleteItem); // Deletes specific item
-    context.subscriptions.push(clear); // Deletes all elements
+    const keybindingsCmd = vscode.commands.registerCommand('todolist.keybindings', async () => {
+        await vscode.commands.executeCommand('workbench.action.openGlobalKeybindings');
+    });
+
+    context.subscriptions.push(refreshCmd); // Refresh item list
+    context.subscriptions.push(openCmd); // Go to file at specific line
+    context.subscriptions.push(addCmd); // Creates new item
+    context.subscriptions.push(deleteCmd); // Deletes specific item
+    context.subscriptions.push(clearCmd); // Deletes all elements
+    context.subscriptions.push(keybindingsCmd); // Open extension's keybindings
 
     vscode.window.registerTreeDataProvider('todoList', dataProvider);
     vscode.window.createTreeView('todoList', { treeDataProvider: dataProvider });

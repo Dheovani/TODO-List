@@ -26,22 +26,27 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "todolist.addTodoItem",
+        "command": "todolist.add",
         "title": "Add TODO List Item"
       },
       {
-        "command": "todolist.openFile",
+        "command": "todolist.open",
         "title": "Opens the file",
         "icon": "$(go-to-file)"
       },
       {
-        "command": "todolist.deleteItem",
+        "command": "todolist.delete",
         "title": "Delete"
       },
       {
         "command": "todolist.clear",
         "title": "Delete all",
         "icon": "$(trash)"
+      },
+      {
+        "command": "todolist.keybindings",
+        "title": "Change keybindings",
+        "icon": "$(gear)"
       }
     ],
     "viewsContainers": {
@@ -64,7 +69,7 @@
     "keybindings": [
       {
         "key": "alt+=",
-        "command": "todolist.addTodoItem",
+        "command": "todolist.add",
         "when": "editorTextFocus",
         "mac": "alt+="
       }
@@ -80,16 +85,21 @@
           "command": "todolist.clear",
           "when": "view == todoList",
           "group": "navigation"
+        },
+        {
+          "command": "todolist.keybindings",
+          "when": "view == todoList",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "todolist.openFile",
+          "command": "todolist.open",
           "when": "view == todoList",
           "group": "inline"
         },
         {
-          "command": "todolist.deleteItem",
+          "command": "todolist.delete",
           "when": "view == todoList"
         }
       ]
