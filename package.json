@@ -1,7 +1,7 @@
 {
-  "name": "todolist",
-  "displayName": "TodoList",
-  "description": "TODO List helper",
+  "name": "todo-list-helper",
+  "displayName": "TODO List Helper",
+  "description": "TODO List Helper",
   "repository": "https://github.com/Dheovani/TODO-List",
   "icon": "resources/TodoIcon.png",
   "author": {
