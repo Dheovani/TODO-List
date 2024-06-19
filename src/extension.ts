@@ -50,14 +50,13 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
 
         if (desc) {
             const elements = workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
-            const child = getChild(desc, editor);
-
             const existingParent = elements.find(el => el.fullPath === document.fileName);
+            const child = getChild(desc, editor);
 
             if (existingParent) {
                 existingParent.children.push(child);
             } else {
-                const parent = getParent(document.fileName, document.uri);
+                const parent = getParent(document.fileName);
                 parent.children.push(child);
                 elements.push(parent);
             }
