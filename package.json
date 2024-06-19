@@ -2,6 +2,11 @@
   "name": "todolist",
   "displayName": "TodoList",
   "description": "TODO List helper",
+  "author": {
+    "name": "Dheovani Xavier da Cruz",
+    "email": "dheovani_xavier@outlook.com"
+  },
+  "publisher": "Dheovani",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.90.0"
@@ -14,16 +19,16 @@
   "contributes": {
     "commands": [
       {
-        "command": "extension.todoList",
-        "title": "TODO List"
-      },
-      {
         "command": "extension.refresh",
         "title": "Refresh list"
       },
       {
         "command": "extension.addTodoItem",
         "title": "Add TODO List Item"
+      },
+      {
+        "command": "extension.openFile",
+        "title": "Opens a file when a tree item is clicked"
       }
     ],
     "viewsContainers": {
