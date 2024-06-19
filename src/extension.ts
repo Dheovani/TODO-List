@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TodoListDataProvider, TodoListItem, WORKSPACE_STATE_KEY, getParent, getChild } from './tree';
+import { TodoListDataProvider, TodoListItem, WORKSPACE_STATE_KEY, FILE, getParent, getChild } from './tree';
 
 // Opens a specific file at a specific line
 async function goToFile(item: TodoListItem): Promise<void> {
@@ -16,6 +16,26 @@ async function goToFile(item: TodoListItem): Promise<void> {
     } catch (error: any) {
         vscode.window.showErrorMessage(`Failed to open file at ${uri.fsPath}: ${error.message}`);
     }
+}
+
+async function remove(item: TodoListItem, workspaceState: vscode.Memento, provider: TodoListDataProvider): Promise<void> {
+    let elements = workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
+    
+    if (item.contextValue === FILE) {
+        elements = elements.filter(el => el.fullPath != item.resourceUri.fsPath);
+    } else {
+        const existingParent = elements.find(el => el.fullPath === item.resourceUri.fsPath);
+
+        if (!existingParent) return;
+
+        existingParent.children = existingParent.children.filter(child => child.fileLine != item.fileLine);
+
+        if (existingParent.children.length === 0)
+            elements = elements.filter(el => el.fullPath != item.resourceUri.fsPath);
+    }
+
+    workspaceState.update(WORKSPACE_STATE_KEY, elements);
+    provider.refresh();
 }
 
 // Adds the "TODO" comment above the current line
@@ -73,10 +93,13 @@ export function activate(context: vscode.ExtensionContext): void {
     const openFile = vscode.commands.registerCommand('extension.openFile', (item: TodoListItem) => goToFile(item));
     const addTodoItem = vscode.commands.registerCommand(
         'extension.addTodoItem', () => addItem(context.workspaceState, dataProvider));
+    const deleteItem = vscode.commands.registerCommand(
+        'extension.deleteItem', (item: TodoListItem) => remove(item, context.workspaceState, dataProvider));
 
     context.subscriptions.push(refresh);
     context.subscriptions.push(openFile);
     context.subscriptions.push(addTodoItem);
+    context.subscriptions.push(deleteItem);
 
     vscode.window.registerTreeDataProvider('todoList', dataProvider);
     vscode.window.createTreeView('todoList', { treeDataProvider: dataProvider });

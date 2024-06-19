@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 
+export const ITEM = "item";
+export const FILE = "file";
 export const WORKSPACE_STATE_KEY = 'TODO_LIST_ITEMS';
 
 export class TodoListItem extends vscode.TreeItem {
@@ -16,6 +18,8 @@ export class TodoListItem extends vscode.TreeItem {
         this.tooltip = fullPath;
         this.description = this.desc;
         this.iconPath = vscode.ThemeIcon.File;
+
+        this.contextValue = collapsibleState === vscode.TreeItemCollapsibleState.Collapsed ? FILE : ITEM;
     }
 }
 

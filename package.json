@@ -31,6 +31,11 @@
         "command": "extension.openFile",
         "title": "Opens the file",
         "icon": "$(go-to-file)"
+      },
+      {
+        "command": "extension.deleteItem",
+        "title": "Removes an item from the list",
+        "icon": "$(trash)"
       }
     ],
     "viewsContainers": {
@@ -69,6 +74,11 @@
       "view/item/context": [
         {
           "command": "extension.openFile",
+          "when": "view == todoList",
+          "group": "inline"
+        },
+        {
+          "command": "extension.deleteItem",
           "when": "view == todoList",
           "group": "inline"
         }
