@@ -2,11 +2,6 @@ import * as vscode from 'vscode';
 
 export const WORKSPACE_STATE_KEY = 'TODO_LIST_ITEMS';
 
-enum TodoContextValues {
-    FILE = "file",
-    ITEM = "item"
-};
-
 export class TodoListItem extends vscode.TreeItem {
     constructor(
         public readonly fullPath: string,
@@ -59,7 +54,6 @@ export function getChild(desc: string, editor: vscode.TextEditor): TodoListItem 
         }
     );
 
-    child.contextValue = TodoContextValues.ITEM;
     return child;
 }
 
@@ -73,7 +67,6 @@ export function getParent(fileName: string, uri?: vscode.Uri): TodoListItem {
             arguments: [uri?.fsPath, 0]
         }
     );
-    
-    parent.contextValue = TodoContextValues.FILE;
+
     return parent;
 }
