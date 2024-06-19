@@ -63,7 +63,7 @@ export function getChild(desc: string, editor: vscode.TextEditor): TodoListItem 
         vscode.TreeItemCollapsibleState.None, undefined,
         {
             command: 'extension.openFile',
-            title: '',
+            title: 'Opens a file when a tree item is clicked',
             arguments: [editor.document.uri.fsPath, editor.selection.active.line]
         }
     );

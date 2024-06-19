@@ -20,7 +20,8 @@
     "commands": [
       {
         "command": "extension.refresh",
-        "title": "Refresh list"
+        "title": "Refresh list",
+        "icon": "$(refresh)"
       },
       {
         "command": "extension.addTodoItem",
@@ -28,7 +29,8 @@
       },
       {
         "command": "extension.openFile",
-        "title": "Opens a file when a tree item is clicked"
+        "title": "Opens a file when a tree item is clicked",
+        "icon": "$(go-to-file)"
       }
     ],
     "viewsContainers": {
@@ -55,7 +57,16 @@
         "when": "editorTextFocus",
         "mac": "cmd+alt+t"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "extension.refresh",
+          "when": "view == todoList",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
