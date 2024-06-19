@@ -40,7 +40,8 @@
       },
       {
         "command": "extension.clear",
-        "title": "Delete all items"
+        "title": "Delete all",
+        "icon": "$(trash)"
       }
     ],
     "viewsContainers": {
@@ -77,7 +78,8 @@
         },
         {
           "command": "extension.clear",
-          "when": "view == todoList"
+          "when": "view == todoList",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
