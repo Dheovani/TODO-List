@@ -7,8 +7,8 @@ export class TodoListItem extends vscode.TreeItem {
         public readonly fullPath: string,
         public readonly desc: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        public readonly resourceUri?: vscode.Uri,
-        public readonly command?: vscode.Command,
+        public readonly resourceUri: vscode.Uri,
+        public readonly fileLine: number = 0,
         public children: TodoListItem[] = []
     ) {
         super(fullPath.split("\\").pop() || fullPath, collapsibleState);
@@ -39,46 +39,25 @@ export class TodoListDataProvider implements vscode.TreeDataProvider<TodoListIte
 
     private getElements(): TodoListItem[] {
         const storedItems = this.workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
+
         return storedItems.map(item => new TodoListItem(
             item.fullPath,
             item.desc,
             item.collapsibleState,
             item.resourceUri,
-            item.command,
-            item.children.map(child => new TodoListItem(
-                child.fullPath,
-                child.desc,
-                child.collapsibleState,
-                child.resourceUri,
-                child.command,
-                []
-            ))
+            item.fileLine,
+            item.children.map(child => new TodoListItem(child.fullPath,
+                child.desc, child.collapsibleState, child.resourceUri, child.fileLine))
         ));
     }
 }
 
-export function getChild(desc: string, editor: vscode.TextEditor): TodoListItem {
-    const child = new TodoListItem(
-        `Line ${editor.selection.active.line}: ${desc}`, desc,
-        vscode.TreeItemCollapsibleState.None, undefined,
-        {
-            command: 'extension.openFile',
-            title: 'Opens a file when a tree item is clicked',
-            arguments: [editor.document.uri.fsPath, editor.selection.active.line]
-        }
-    );
-
-    return child;
+export function getChild(desc: string, fileName: string, line: number): TodoListItem {
+    const uri = vscode.Uri.file(fileName);
+    return new TodoListItem(`Line ${line}: ${desc}`, desc, vscode.TreeItemCollapsibleState.None, uri, line);
 }
 
 export function getParent(fileName: string): TodoListItem {
     const uri = vscode.Uri.file(fileName);
-
-    const parent = new TodoListItem(fileName, "", vscode.TreeItemCollapsibleState.Collapsed, uri, {
-        command: 'extension.openFile',
-        title: '',
-        arguments: [uri?.fsPath, 0]
-    });
-
-    return parent;
+    return new TodoListItem(fileName, "", vscode.TreeItemCollapsibleState.Collapsed, uri);
 }

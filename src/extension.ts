@@ -2,19 +2,19 @@ import * as vscode from 'vscode';
 import { TodoListDataProvider, TodoListItem, WORKSPACE_STATE_KEY, getParent, getChild } from './tree';
 
 // Opens a specific file at a specific line
-async function openFile(filePath: string, lineNumber: number = 0): Promise<void> {
-    const uri = vscode.Uri.file(filePath);
+async function goToFile(item: TodoListItem): Promise<void> {
+    const uri = item.resourceUri;
 
     try {
-        const document = await vscode.workspace.openTextDocument(uri);
+        const document = await vscode.workspace.openTextDocument(uri.fsPath);
         const editor = await vscode.window.showTextDocument(document);
-        const position = new vscode.Position(lineNumber, 0);
+        const position = new vscode.Position(item.fileLine, 0);
         const selection = new vscode.Selection(position, position);
 
         editor.selection = selection;
         editor.revealRange(selection, vscode.TextEditorRevealType.InCenter);
     } catch (error: any) {
-        vscode.window.showErrorMessage(`Failed to open file at ${filePath}: ${error.message}`);
+        vscode.window.showErrorMessage(`Failed to open file at ${uri.fsPath}: ${error.message}`);
     }
 }
 
@@ -51,7 +51,7 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
         if (desc) {
             const elements = workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
             const existingParent = elements.find(el => el.fullPath === document.fileName);
-            const child = getChild(desc, editor);
+            const child = getChild(desc, document.fileName, editor.selection.active.line);
 
             if (existingParent) {
                 existingParent.children.push(child);
@@ -70,14 +70,13 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
 export function activate(context: vscode.ExtensionContext): void {
     const dataProvider = new TodoListDataProvider(context.workspaceState);
     const refresh = vscode.commands.registerCommand('extension.refresh', () => dataProvider.refresh());
+    const openFile = vscode.commands.registerCommand('extension.openFile', (item: TodoListItem) => goToFile(item));
     const addTodoItem = vscode.commands.registerCommand(
         'extension.addTodoItem', () => addItem(context.workspaceState, dataProvider));
-    const openFileCommand = vscode.commands.registerCommand(
-        'extension.openFile', (filePath: string, lineNumber: number) => openFile(filePath, lineNumber));
 
     context.subscriptions.push(refresh);
+    context.subscriptions.push(openFile);
     context.subscriptions.push(addTodoItem);
-    context.subscriptions.push(openFileCommand);
 
     vscode.window.registerTreeDataProvider('todoList', dataProvider);
     vscode.window.createTreeView('todoList', { treeDataProvider: dataProvider });

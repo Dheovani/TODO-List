@@ -29,7 +29,7 @@
       },
       {
         "command": "extension.openFile",
-        "title": "Opens a file when a tree item is clicked",
+        "title": "Opens the file",
         "icon": "$(go-to-file)"
       }
     ],
@@ -64,6 +64,13 @@
           "command": "extension.refresh",
           "when": "view == todoList",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "extension.openFile",
+          "when": "view == todoList",
+          "group": "inline"
         }
       ]
     }
