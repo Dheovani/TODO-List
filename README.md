@@ -35,6 +35,7 @@ Once installed, you can access the TODO Organizer from the Activity Bar. The fol
 [Clear](samples/Clear.gif)
 
 - ⚙️ Keybinding: Set specific keybinding for add function
+[Keybinding](samples/Keybinding.gif)
 
 ## 🤝 Contributing
 Contributions are welcome! If you find any issues or have suggestions for improvements, please create an issue or submit a pull request on GitHub.
