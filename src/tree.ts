@@ -6,16 +6,17 @@ export const WORKSPACE_STATE_KEY = 'TODO_LIST_ITEMS';
 
 export class TodoListItem extends vscode.TreeItem {
     constructor(
-        public readonly fullPath: string,
+        public readonly name: string,
         public readonly desc: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly resourceUri: vscode.Uri,
+        public readonly fullPath: string,
         public readonly fileLine: number = 0,
         public children: TodoListItem[] = []
     ) {
-        super(fullPath.split("\\").pop() || fullPath, collapsibleState);
+        super(name.split("\\").pop() || name, collapsibleState);
 
-        this.tooltip = fullPath;
+        this.tooltip = name;
         this.description = this.desc;
         this.iconPath = vscode.ThemeIcon.File;
 
@@ -44,24 +45,29 @@ export class TodoListDataProvider implements vscode.TreeDataProvider<TodoListIte
     private getElements(): TodoListItem[] {
         const storedItems = this.workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
 
-        return storedItems.map(item => new TodoListItem(
-            item.fullPath,
-            item.desc,
-            item.collapsibleState,
-            item.resourceUri,
-            item.fileLine,
-            item.children.map(child => new TodoListItem(child.fullPath,
-                child.desc, child.collapsibleState, child.resourceUri, child.fileLine))
-        ));
+        return storedItems.map(item => {
+            const uri = vscode.Uri.file(item.fullPath);
+
+            return new TodoListItem(
+                item.name,
+                item.desc,
+                item.collapsibleState,
+                item.resourceUri || uri,
+                item.fullPath,
+                item.fileLine,
+                item.children.map(child => new TodoListItem(child.name, child.desc,
+                    child.collapsibleState, child.resourceUri || uri, child.fullPath, child.fileLine))
+            );
+        });
     }
 }
 
 export function getChild(desc: string, fileName: string, line: number): TodoListItem {
     const uri = vscode.Uri.file(fileName);
-    return new TodoListItem(`Line ${line}: ${desc}`, desc, vscode.TreeItemCollapsibleState.None, uri, line);
+    return new TodoListItem(`Line ${line}: ${desc}`, desc, vscode.TreeItemCollapsibleState.None, uri, fileName, line);
 }
 
 export function getParent(fileName: string): TodoListItem {
     const uri = vscode.Uri.file(fileName);
-    return new TodoListItem(fileName, "", vscode.TreeItemCollapsibleState.Collapsed, uri);
+    return new TodoListItem(fileName, "", vscode.TreeItemCollapsibleState.Collapsed, uri, fileName);
 }

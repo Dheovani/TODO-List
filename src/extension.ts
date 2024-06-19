@@ -3,10 +3,8 @@ import { TodoListDataProvider, TodoListItem, WORKSPACE_STATE_KEY, FILE, getParen
 
 // Opens a specific file at a specific line
 async function goToFile(item: TodoListItem): Promise<void> {
-    const uri = item.resourceUri;
-
     try {
-        const document = await vscode.workspace.openTextDocument(uri.fsPath);
+        const document = await vscode.workspace.openTextDocument(item.fullPath);
         const editor = await vscode.window.showTextDocument(document);
         const position = new vscode.Position(item.fileLine, 0);
         const selection = new vscode.Selection(position, position);
@@ -14,24 +12,25 @@ async function goToFile(item: TodoListItem): Promise<void> {
         editor.selection = selection;
         editor.revealRange(selection, vscode.TextEditorRevealType.InCenter);
     } catch (error: any) {
-        vscode.window.showErrorMessage(`Failed to open file at ${uri.fsPath}: ${error.message}`);
+        vscode.window.showErrorMessage(`Failed to open file at ${item.fullPath}: ${error.message}`);
     }
 }
 
+// Removes an item from the list
 async function remove(item: TodoListItem, workspaceState: vscode.Memento, provider: TodoListDataProvider): Promise<void> {
     let elements = workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
     
     if (item.contextValue === FILE) {
-        elements = elements.filter(el => el.fullPath != item.resourceUri.fsPath);
+        elements = elements.filter(el => el.fullPath != item.fullPath);
     } else {
-        const existingParent = elements.find(el => el.fullPath === item.resourceUri.fsPath);
+        const existingParent = elements.find(el => el.fullPath === item.fullPath);
 
         if (!existingParent) return;
 
         existingParent.children = existingParent.children.filter(child => child.fileLine != item.fileLine);
 
         if (existingParent.children.length === 0)
-            elements = elements.filter(el => el.fullPath != item.resourceUri.fsPath);
+            elements = elements.filter(el => el.fullPath != item.fullPath);
     }
 
     workspaceState.update(WORKSPACE_STATE_KEY, elements);
@@ -88,6 +87,7 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
 }
 
 export function activate(context: vscode.ExtensionContext): void {
+    // context.workspaceState.update(WORKSPACE_STATE_KEY, undefined);
     const dataProvider = new TodoListDataProvider(context.workspaceState);
     const refresh = vscode.commands.registerCommand('extension.refresh', () => dataProvider.refresh());
     const openFile = vscode.commands.registerCommand('extension.openFile', (item: TodoListItem) => goToFile(item));
