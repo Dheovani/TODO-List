@@ -47,6 +47,10 @@
         "command": "todolist.keybindings",
         "title": "Change keybindings",
         "icon": "$(gear)"
+      },
+      {
+        "command": "todolist.openPage",
+        "title": "Open Extension's Page in the Marketplace"
       }
     ],
     "viewsContainers": {
@@ -66,6 +70,12 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "todoList",
+        "contents": "You've got nothing else TODO!\nTo learn more about how to add new TODOs, click the button bellow:\n[Go to extension's page](https://marketplace.visualstudio.com/publishers/Dheovani)"
+      }
+    ],
     "keybindings": [
       {
         "key": "alt+=",

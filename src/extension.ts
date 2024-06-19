@@ -82,6 +82,23 @@ async function addItem(workspaceState: vscode.Memento, provider: TodoListDataPro
     }
 }
 
+// Add a todo item by a giver content and line
+async function addSpecificLine(content: string, line: number, fileName: string, workspaceState: vscode.Memento): Promise<void> {
+    const elements = workspaceState.get<TodoListItem[]>(WORKSPACE_STATE_KEY) || [];
+    const existingParent = elements.find(el => el.fullPath === fileName);
+    const child = getChild(content, fileName, line);
+
+    if (existingParent) {
+        existingParent.children.push(child);
+    } else {
+        const parent = getParent(fileName);
+        parent.children.push(child);
+        elements.push(parent);
+    }
+
+    workspaceState.update(WORKSPACE_STATE_KEY, elements);
+}
+
 export function activate(context: vscode.ExtensionContext): void {
     const dataProvider = new TodoListDataProvider(context.workspaceState);
 
@@ -101,15 +118,38 @@ export function activate(context: vscode.ExtensionContext): void {
         await vscode.commands.executeCommand('workbench.action.openGlobalKeybindings');
     });
 
+    const openPageCmd = vscode.commands.registerCommand('todolist.openPage', async () => {
+		await vscode.env.openExternal(vscode.Uri.parse('vscode:extensions/Dheovani.todo-list-helper'));
+	});
+
     context.subscriptions.push(refreshCmd); // Refresh item list
     context.subscriptions.push(openCmd); // Go to file at specific line
     context.subscriptions.push(addCmd); // Creates new item
     context.subscriptions.push(deleteCmd); // Deletes specific item
     context.subscriptions.push(clearCmd); // Deletes all elements
     context.subscriptions.push(keybindingsCmd); // Open extension's keybindings
+    context.subscriptions.push(openPageCmd); // Open extension's page
 
     vscode.window.registerTreeDataProvider('todoList', dataProvider);
     vscode.window.createTreeView('todoList', { treeDataProvider: dataProvider });
+
+    vscode.workspace.onDidChangeTextDocument(event => {
+        const { document, contentChanges } = event;
+
+        contentChanges.forEach(change => {
+            const { text } = document.lineAt(change.range.start.line);
+
+            if (text.toLowerCase().includes("todo")) {
+                vscode.window.showInformationMessage("Would you like to add this item to your TODO list?", "Yes", "No")
+                    .then(answer => {
+                        if (answer === 'Yes') {
+                            addSpecificLine(text, change.range.start.line, document.fileName, context.workspaceState);
+                            dataProvider.refresh();
+                        }
+                    });
+            }
+        });
+    });
 }
 
 export function deactivate(): void {}

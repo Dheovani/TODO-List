@@ -28,6 +28,9 @@ Once installed, you can access the TODO Organizer from the Activity Bar. The fol
 - ➕ Add TODO Item: Add a new TODO item.
 ![Add item](samples/Add%20item.gif)
 
+- ➕ ... OR just type TODO and i'll add it for you
+![Auto Add](samples/Auto%20Add.gif)
+
 - 🗑️ Delete Item: Delete a specific TODO item.
 ![Delete](samples/Delete.gif)
 
