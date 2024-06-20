@@ -12,12 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - View Welcome pointing to the extension's marketplace
 - Event to track text document changes and identify TODOs and add them to the list
 
+### Changed
+
+- Go-to-file function now has a callback to delete an item that no longer exists
+- Add Item function now adds the TODO comment according to the filetype
+
 ## [1.0.0]
 
 ### Added
 
 - Custom tree view for visualizing TODOs list
-- Add TODO keybingin
+- Add TODO keybinding
 - Delete TODO
 - Clear TODOs list
 - Go-to-file by a given TODO

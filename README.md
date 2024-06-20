@@ -25,6 +25,9 @@ Once installed, you can access the TODO Organizer from the Activity Bar. The fol
 - ➡️ Open File: Open the file at the specific TODO.
 ![Open file](samples/Open%20file.gif)
 
+- ➡️ Open File and Delete: If the opened item doesn't exist anymore, you can delete it
+![Delete If Dont Exists](samples/Delete%20If%20Dont%20Exists.gif)
+
 - ➕ Add TODO Item: Add a new TODO item.
 ![Add item](samples/Add%20item.gif)
 
